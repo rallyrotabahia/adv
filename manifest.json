@@ -1,0 +1,21 @@
+{
+  "name": "Rally Tracker Pro",
+  "short_name": "RallyTracker",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#e67e22",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/italomota2011/rallyadv/refs/heads/main/Logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/italomota2011/rallyadv/refs/heads/main/Logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
