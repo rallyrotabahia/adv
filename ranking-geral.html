@@ -23,10 +23,11 @@
         .col-pos { width: 60px; font-weight: bold; color: #e67e22; }
         .col-num { width: 60px; }
         .col-piloto { width: auto; }
-        .col-tempo { width: 150px; font-family: monospace; color: #fbd38d; font-weight: bold; }
-        .col-pontos { width: 180px; text-align: right; font-weight: bold; color: #48bb78; font-size: 1.1rem; }
+        .col-tempo { width: 130px; font-family: monospace; color: #fbd38d; font-weight: bold; }
+        .col-penal { width: 110px; text-align: center; color: #fc8181; font-weight: bold; } /* Nova Coluna */
+        .col-pontos { width: 150px; text-align: center; font-weight: bold; color: #48bb78; font-size: 1.1rem; }
 
-        .text-right { text-align: right; }
+        .text-center { text-align: center; }
         
         #logoInvisivel { display: none; }
         .btn { border-radius: 5px; font-weight: bold; transition: 0.3s; padding: 10px 20px; border: none; cursor: pointer; color: white; }
@@ -49,7 +50,7 @@
         <input type="text" id="inputCidade" placeholder="Ex: Etapa de Verão - Salvador">
         <div style="margin-top: 15px; display: flex; gap: 10px;">
             <button class="btn btn-voltar" onclick="location.href='admin.html'">VOLTAR</button>
-            <button class="btn btn-pdf" onclick="exportarPDF()">GERAR PDF OFICIAL</button>
+            <button class="btn btn-pdf" onclick="exportarPDF()">GERAR PDF</button>
         </div>
     </div>
 
@@ -94,6 +95,7 @@
                         id, ...p, 
                         tempoStr,
                         tSeg: tempoParaSegundos(tempoStr),
+                        ptsGPS,
                         totalPts
                     });
                 }
@@ -114,8 +116,9 @@
                                 <th class="col-pos">Pos</th>
                                 <th class="col-num">Nº</th>
                                 <th class="col-piloto">Piloto</th>
-                                <th class="col-tempo">Tempo Total</th>
-                                <th class="col-pontos text-right">Pontuação Final</th>
+                                <th class="col-tempo">Tempo</th>
+                                <th class="col-penal" style="text-align:center;">Penalização</th>
+                                <th class="col-pontos">Pontuação Final</th>
                             </tr>
                         </thead>
                         <tbody>`;
@@ -126,7 +129,8 @@
                         <td class="col-num"><b>${p.id}</b></td>
                         <td class="col-piloto">${p.nome}</td>
                         <td class="col-tempo">${p.tempoStr}</td>
-                        <td class="col-pontos text-right">${p.totalPts.toLocaleString('pt-BR')} pts</td>
+                        <td class="col-penal">${p.ptsGPS.toLocaleString('pt-BR')}</td>
+                        <td class="col-pontos">${p.totalPts.toLocaleString('pt-BR')} pts</td>
                     </tr>`;
                 });
                 html += `</tbody></table></div>`;
@@ -159,22 +163,23 @@
                 doc.setFontSize(14);
                 doc.setTextColor(0, 0, 0);
                 doc.text(titulo, 14, finalY);
+
                 doc.autoTable({ 
-    html: tabela, 
-    startY: finalY + 5, 
-    theme: 'striped',
-    headStyles: { fillColor: [230, 126, 34], halign: 'center' }, // Centraliza cabeçalho
-    columnStyles: {
-        0: { halign: 'center' }, // POS
-        1: { halign: 'center' }, // Nº
-        2: { halign: 'center' }, // Piloto 
-        3: { halign: 'center' },  // Penalidade
-        4: { halign: 'center', fontStyle: 'bold' } // Pontuação Final (Centralizada e Negrito)
-    },
-    didDrawPage: function (data) {
-        finalY = data.cursor.y;
-    }
-});
+                    html: tabela, 
+                    startY: finalY + 5, 
+                    theme: 'striped',
+                    headStyles: { 
+                        fillColor: [230, 126, 34],
+                        halign: 'center' 
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 12, halign: 'center' }, // Pos
+                        1: { cellWidth: 12, halign: 'center' }, // Nº
+                        3: { cellWidth: 35, halign: 'center' }, // Tempo
+                        4: { cellWidth: 35, halign: 'center' }, // Penalização (Nova)
+                        5: { halign: 'center' }                // Pontos Final
+                    }
+                });
                 finalY = doc.lastAutoTable.finalY + 15;
             }
         });
