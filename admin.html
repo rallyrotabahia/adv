@@ -2,110 +2,118 @@
 <html>
 <head>
     <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Painel Admin Rally - Oficial</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
     <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #1a202c; overflow: hidden; font-family: sans-serif; }
+        * { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #1a202c; overflow: hidden; font-family: sans-serif; }
+
+/* Toolbar fixa no topo */
+#toolbar { 
+    height: 60px; 
+    background: #2d3748; 
+    display: flex; 
+    align-items: center; 
+    padding: 0 15px; 
+    gap: 10px; 
+    z-index: 9999; 
+    position: relative; 
+    justify-content: space-between;
+}
+
+/* Container dos botões que virará o menu */
+.nav-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#map { height: calc(100vh - 60px); width: 100%; display: block; background: #a0aec0; }
+
+/* Estilização padrão de botões e inputs */
+button { padding: 8px 12px; background: #4a5568; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; white-space: nowrap; }
+input, select { padding: 8px; border-radius: 4px; border: none; background: #1a202c; color: white; }
+
+/* Ícone Hambúrguer (Escondido no Desktop) */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none;
+    padding: 10px;
+}
+.hamburger div { width: 25px; height: 3px; background: white; border-radius: 2px; }
+
+/* Responsividade para Celular */
+@media (max-width: 850px) {
+    .hamburger { display: flex; }
     
-    #toolbar { 
-        min-height: 60px; 
-        background: #2d3748; 
-        display: flex; 
-        align-items: center; 
-        padding: 10px; 
-        gap: 8px; 
-        z-index: 9999; 
-        position: relative;
-        flex-wrap: nowrap; /* Impede quebra de linha brusca */
-        overflow-x: auto;  /* Permite rolar os botões no celular */
-        -webkit-overflow-scrolling: touch;
+    .nav-content {
+        display: none; /* Esconde por padrão no mobile */
+        flex-direction: column;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        background: #2d3748;
+        padding: 20px;
+        gap: 15px;
+        z-index: 10000;
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.3);
     }
 
-    /* Esconde a barra de rolagem do toolbar para ficar mais limpo */
-    #toolbar::-webkit-scrollbar { display: none; }
-
-    #map { 
-        height: calc(100vh - 60px); 
-        width: 100%; 
-        display: block; 
-        background: #a0aec0; 
-    }
-
-    button { 
-        padding: 10px 14px; 
-        background: #4a5568; 
-        color: white; 
-        border: none; 
-        border-radius: 6px; 
-        cursor: pointer; 
-        font-weight: bold; 
-        font-size: 12px; 
-        white-space: nowrap; /* Impede que o texto do botão quebre */
-        flex-shrink: 0;      /* Garante que o botão mantenha o tamanho */
-    }
-
-    button:hover { background: #718096; }
+    .nav-content.active { display: flex; } /* Mostra quando clicado */
     
-    input, select { 
-        padding: 10px; 
-        border-radius: 6px; 
-        border: none; 
-        background: #1a202c; 
-        color: white; 
-        min-width: 130px; 
-        flex-shrink: 0;
+    .nav-content button, .nav-content select, .nav-content input {
+        width: 100%;
+        height: 45px;
+        font-size: 14px;
     }
+    
+    .divider { display: none; } /* Esconde divisores no mobile */
+}
 
-    .marker-label { 
-        background: #ed8936; 
-        border: 2px solid white; 
-        border-radius: 50%; 
-        color: white; 
-        font-weight: bold; 
-        text-align: center; 
-        line-height: 26px; 
-        width: 30px; 
-        height: 30px; 
-        font-size: 12px; 
-    }
-
-    /* Ajuste para telas pequenas */
-    @media (max-width: 600px) {
-        #toolbar { height: auto; padding: 12px; }
-        #map { height: calc(100vh - 75px); }
-        .leaflet-touch .leaflet-draw-toolbar { display: none; } /* Opcional: esconde ferramentas de desenho se ocupar muito espaço */
-    }
-</style>
+.marker-label { background: #ed8936; border: 2px solid white; border-radius: 50%; color: white; font-weight: bold; text-align: center; line-height: 26px; width: 30px; height: 30px; font-size: 12px; }
+    </style>
 </head>
 <body>
     <div id="toolbar">
-    <input type="text" id="cityInput" placeholder="Cidade...">
-    <button onclick="buscar()">🔍 Buscar</button>
-    <div style="width: 2px; height: 30px; background: #4a5568; margin: 0 5px;"></div>
-    
-    <button onclick="salvar()" style="background: #38a169;">💾 Salvar Trajeto</button>
-    <button id="btnStatusProva" onclick="alternarStatusProva()" style="background: #4a5568;">Verificando Status...</button>    
-    <button onclick="window.location.href='rastro.html'" style="background: #805ad5;">🗺️ Rastro</button>
-    <button onclick="apurar()" style="background: #dd6b20;">🏁 Rodar Apuração</button>
-    <button onclick="window.location.href='resultados.html'" style="background: #3182ce;">📊 Pontos</button>
-    <button onclick="window.location.href='tempos.html'" style="background: #d69e2e;">⏱️ Hora Chegada</button>
-    <button onclick="window.location.href='ranking-tempo.html'" style="background: #2c7a7b;">⏱️ Tempos</button>
-    <button onclick="window.location.href='fotos.html'" style="background: #3182ce;">📸 Fotos</button>
-    <button onclick="window.location.href='ranking-fotos.html'" style="background: #2b6cb0;">📊 Ranking Fotos</button>
-    <div style="width: 2px; height: 30px; background: #4a5568; margin: 0 5px;"></div>
-    
-    <button onclick="window.location.href='ranking-geral.html'" style="background: #b7791f; border: 2px solid #f6e05e;">🏆 RANKING FINAL</button>
-    
-    <div style="width: 2px; height: 30px; background: #4a5568; margin: 0 5px;"></div>
-    
-    <select id="carSelector" style="padding: 8px; border-radius: 4px; background: #1a202c; color: white; border: 1px solid #4a5568;">
-    <option value="">Selecionar Carro...</option>
-</select>
-<button onclick="excluirCarro()" style="background: #e53e3e; margin-right: 10px;">🗑️ Excluir Carro</button>  
-    <button onclick="resetar()" style="background: #e53e3e;">⚠️ Reset</button>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="text" id="cityInput" placeholder="Cidade...">
+        <button onclick="buscar()">🔍</button>
+    </div>
+
+    <button class="hamburger" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </button>
+
+    <div class="nav-content" id="navContent">
+        <button onclick="salvar()" style="background: #38a169;">💾 Salvar Trajeto</button>
+        <button id="btnStatusProva" onclick="alternarStatusProva()" style="background: #4a5568;">Status...</button>    
+        <button onclick="window.location.href='rastro.html'" style="background: #805ad5;">🗺️ Rastro</button>
+        <button onclick="apurar()" style="background: #dd6b20;">🏁 Apurar</button>
+        
+        <div class="divider" style="width: 2px; height: 30px; background: #4a5568;"></div>
+        
+        <button onclick="window.location.href='resultados.html'" style="background: #3182ce;">📊 Pontos</button>
+        <button onclick="window.location.href='tempos.html'" style="background: #d69e2e;">⏱️ Chegada</button>
+        <button onclick="window.location.href='ranking-tempo.html'" style="background: #2c7a7b;">⏱️ Tempos</button>
+        
+        <button onclick="window.location.href='ranking-geral.html'" style="background: #b7791f; border: 2px solid #f6e05e;">🏆 RANKING</button>
+        
+        <select id="carSelector">
+            <option value="">Carro...</option>
+        </select>
+        <button onclick="excluirCarro()" style="background: #e53e3e;">🗑️ Excluir</button>  
+        <button onclick="resetar()" style="background: #e53e3e;">⚠️ Reset</button>
+    </div>
+</div>
 </div>
     
     <div id="map"></div>
@@ -380,7 +388,6 @@ window.alternarStatusProva = function() {
     </script>
 </body>
 </html>
-
 
 
 
