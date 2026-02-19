@@ -66,6 +66,12 @@
 </head>
 <body>
     <div id="toolbar">
+        <div class="button-group">
+    <input type="text" id="coordsInput" placeholder="Lat, Lng (ex: -12.2,-38.9)">
+    <button onclick="adicionarPontoNaLinha()" style="background: #4a5568;">📍 Add Ponto</button>
+    <button onclick="finalizarLinhaManual()" style="background: #2b6cb0;">✏️ Criar Linha</button>
+    <button onclick="limparTemporarios()" style="background: #718096;">🗑️ Limpar</button>
+</div>
     <div class="button-group">
         <input type="text" id="cityInput" placeholder="Cidade...">
         <button onclick="buscar()">🔍 Buscar</button>
