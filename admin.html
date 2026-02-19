@@ -125,6 +125,59 @@
         const db = firebase.database(app);
         let map, drawnItems;
 
+        let pontosTemporarios = [];
+let linhaTemporaria = L.polyline([], {color: 'yellow'}).addTo(map);
+
+window.adicionarPontoNaLinha = function() {
+    const input = document.getElementById('coordsInput').value;
+    const partes = input.split(',');
+    
+    if (partes.length !== 2) {
+        alert("Formato inválido! Use: Latitude, Longitude");
+        return;
+    }
+
+    const lat = parseFloat(partes[0].trim());
+    const lng = parseFloat(partes[1].trim());
+
+    if (isNaN(lat) || isNaN(lng)) {
+        alert("Coordenadas numéricas inválidas.");
+        return;
+    }
+
+    pontosTemporarios.push([lat, lng]);
+    linhaTemporaria.setLatLngs(pontosTemporarios);
+    
+    // Centraliza o mapa no novo ponto
+    map.setView([lat, lng], 15);
+    
+    // Limpa o input para a próxima coordenada
+    document.getElementById('coordsInput').value = "";
+    console.log("Ponto adicionado:", lat, lng);
+};
+
+window.finalizarLinhaManual = function() {
+    if (pontosTemporarios.length < 2) {
+        alert("Adicione pelo menos 2 pontos para formar uma linha.");
+        return;
+    }
+
+    // Cria a polyline oficial que o Leaflet.Draw reconhece
+    const novaLinha = L.polyline(pontosTemporarios, { color: '#3388ff' });
+    
+    // Adiciona ao grupo de itens desenhados (para que o 'Salvar' funcione)
+    novaLinha.addTo(drawnItems);
+    
+    // Limpa a linha guia
+    limparTemporarios();
+    alert("Linha criada e adicionada ao trajeto! Não esqueça de clicar em SALVAR.");
+};
+
+window.limparTemporarios = function() {
+    pontosTemporarios = [];
+    linhaTemporaria.setLatLngs([]);
+};
+
         function initMap() {
             const camadaRuas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
             const camadaSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
