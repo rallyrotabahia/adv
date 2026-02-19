@@ -14,12 +14,13 @@
         display: flex; 
         flex-wrap: wrap; 
         padding: 10px; 
-        gap: 10px; 
+        gap: 15px; 
         z-index: 9999; 
         position: relative;
         border-bottom: 1px solid #4a5568;
     }
 
+    /* Grupos de botões */
     .button-group {
         display: flex;
         flex-wrap: wrap;
@@ -65,36 +66,35 @@
 </head>
 <body>
     <div id="toolbar">
-        <div class="button-group">
-            <input type="text" id="cityInput" placeholder="Cidade...">
-            <button onclick="buscar()">🔍 Buscar</button>
-            <button onclick="salvar()" style="background: #38a169;">💾 Salvar Trajeto</button>
-            <button id="btnStatusProva" onclick="alternarStatusProva()">Aguardando...</button>
-        </div>
-
-        <div class="button-group" style="border: 1px solid #4a5568;">
-            <input type="text" id="latInput" placeholder="Lat: -12.26" style="width: 90px;">
-            <input type="text" id="lngInput" placeholder="Lng: -38.96" style="width: 90px;">
-            <select id="tipoMarcacao">
-                <option value="pc">📍 PC (Círculo)</option>
-                <option value="radar">📡 Radar (Quadrado)</option>
-            </select>
-            <button onclick="adicionarPorCoordenada()" style="background: #2b6cb0;">➕ Add Coordenada</button>
-        </div>
-
-        <div class="button-group">
-            <button onclick="window.location.href='rastro.html'" style="background: #805ad5;">🗺️ Rastro</button>
-            <button onclick="apurar()" style="background: #dd6b20;">🏁 Rodar Apuração</button>
-            <button onclick="window.location.href='tempos.html'" style="background: #d69e2e;">⏱️ Chegada</button>
-            <button onclick="window.location.href='ranking-geral.html'" style="background: #b7791f; border: 1px solid #f6e05e;">🏆 RANKING</button>
-        </div>
-
-        <div class="button-group">
-            <select id="carSelector"><option value="">Carro...</option></select>
-            <button onclick="excluirCarro()" style="background: #e53e3e;">🗑️ Excluir</button>  
-            <button onclick="resetar()" style="background: #e53e3e;">⚠️ Reset</button>
-        </div>
+    <div class="button-group">
+        <input type="text" id="cityInput" placeholder="Cidade...">
+        <button onclick="buscar()">🔍 Buscar</button>
+        <button onclick="salvar()" style="background: #38a169;">💾 Salvar Trajeto</button>
+        <button id="btnStatusProva" onclick="alternarStatusProva()">Aguardando...</button>
     </div>
+
+    <div class="button-group">
+        <button onclick="window.location.href='rastro.html'" style="background: #805ad5;">🗺️ Rastro</button>
+        <button onclick="apurar()" style="background: #dd6b20;">🏁 Rodar Apuração</button>
+        <button onclick="window.location.href='tempos.html'" style="background: #d69e2e;">⏱️ Chegada</button>
+        <button onclick="window.location.href='fotos.html'" style="background: #3182ce;">📸 Fotos</button>
+    </div>
+
+    <div class="button-group">
+        <button onclick="window.location.href='resultados.html'" style="background: #3182ce;">📊 Pontos</button>
+        <button onclick="window.location.href='ranking-tempo.html'" style="background: #2c7a7b;">⏱️ Tempos</button>
+        <button onclick="window.location.href='ranking-fotos.html'" style="background: #2b6cb0;">📊 Rank Fotos</button>
+        <button onclick="window.location.href='ranking-geral.html'" style="background: #b7791f; border: 1px solid #f6e05e;">🏆 RANKING FINAL</button>
+    </div>
+
+    <div class="button-group">
+        <select id="carSelector">
+            <option value="">Carro...</option>
+        </select>
+        <button onclick="excluirCarro()" style="background: #e53e3e;">🗑️ Excluir</button>  
+        <button onclick="resetar()" style="background: #e53e3e;">⚠️ Reset</button>
+    </div>
+</div>
     
     <div id="map"></div>
 
@@ -123,10 +123,15 @@
             const camadaRuas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
             const camadaSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
             
-            map = L.map('map', { center: [-12.26, -38.96], zoom: 13, layers: [camadaRuas] });
+            map = L.map('map', { 
+                center: [-12.26, -38.96], 
+                zoom: 13, 
+                layers: [camadaRuas] 
+            });
+
             L.control.layers({ "Mapa": camadaRuas, "Satélite": camadaSat }).addTo(map);
-            
             drawnItems = new L.FeatureGroup().addTo(map);
+            
             const drawControl = new L.Control.Draw({
                 edit: { featureGroup: drawnItems },
                 draw: { polyline: true, polygon: true, circle: true, rectangle: false, marker: false, circlemarker: false }
@@ -151,43 +156,28 @@
             rastrearCarros();
             atualizarSeletorCarros();
             monitorarStatusProva();
+            
+            // Força o redimensionamento para garantir que o mapa apareça
             setTimeout(() => { map.invalidateSize(); }, 500);
         }
 
         window.onload = initMap;
 
-        // --- NOVA FUNÇÃO DE COORDENADAS ---
-        window.adicionarPorCoordenada = function() {
-            const lat = parseFloat(document.getElementById('latInput').value.replace(',', '.'));
-            const lng = parseFloat(document.getElementById('lngInput').value.replace(',', '.'));
-            const tipo = document.getElementById('tipoMarcacao').value;
-
-            if (isNaN(lat) || isNaN(lng)) { alert("Insira coordenadas válidas."); return; }
-
-            const centro = [lat, lng];
-            if (tipo === 'pc') {
-                const raio = parseInt(prompt("Raio do PC (metros):", "20")) || 20;
-                const circulo = L.circle(centro, { radius: raio, color: '#3182ce' }).addTo(drawnItems);
-                circulo.feature = { type: "Feature", properties: { type: 'circle', radius: raio }, geometry: circulo.toGeoJSON().geometry };
-            } else {
-                const vMax = parseInt(prompt("Velocidade Máxima (KM/H):", "60")) || 60;
-                const offset = 0.00015; // aprox 15m
-                const coords = [
-                    [lat + offset, lng - offset], [lat + offset, lng + offset],
-                    [lat - offset, lng + offset], [lat - offset, lng - offset]
-                ];
-                const poli = L.polygon(coords, { color: '#e53e3e' }).addTo(drawnItems);
-                poli.feature = { type: "Feature", properties: { velocidade: vMax }, geometry: poli.toGeoJSON().geometry };
-            }
-            map.setView(centro, 17);
+        window.buscar = async function() {
+            const q = document.getElementById('cityInput').value;
+            if(!q) return;
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
+                const data = await res.json();
+                if(data[0]) map.setView([data[0].lat, data[0].lon], 14);
+            } catch(e) { alert("Erro na busca."); }
         };
 
-        // --- FUNÇÕES ORIGINAIS MANTIDAS ---
         window.salvar = function() {
             const data = { type: "FeatureCollection", features: [] };
             drawnItems.eachLayer(layer => {
                 const gj = layer.toGeoJSON();
-                gj.properties = layer.feature?.properties || {};
+                gj.properties = gj.properties || {};
                 if (layer instanceof L.Circle) {
                     gj.properties.type = 'circle';
                     gj.properties.radius = layer.getRadius();
@@ -202,33 +192,47 @@
                 if(snap.exists()) {
                     L.geoJSON(snap.val(), {
                         pointToLayer: (f, latlng) => f.properties?.type === 'circle' ? L.circle(latlng, { radius: f.properties.radius }) : null,
-                        onEachFeature: (f, l) => { 
-                            l.feature = f;
-                            drawnItems.addLayer(l); 
-                        }
+                        onEachFeature: (f, l) => { drawnItems.addLayer(l); }
                     });
                 }
             });
         }
 
-        function rastrearCarros() {
-            const markers = {};
-            db.ref('posicoes').on('value', snap => {
-                snap.forEach(c => {
-                    const id = c.key; const p = c.val();
-                    if(markers[id]) markers[id].setLatLng([p.lat, p.lng]);
-                    else {
-                        markers[id] = L.marker([p.lat, p.lng], { 
-                            icon: L.divIcon({ className:'marker-label', html: id, iconSize:[30,30] }) 
-                        }).addTo(map).on('click', () => {
-                            db.ref(`competidores/${id}/nome`).once('value', n => {
-                                markers[id].bindPopup(`<b>Carro: ${id}</b><br>Piloto: ${n.val() || "---"}<br>Vel: ${p.vel || 0} km/h`).openPopup();
-                            });
-                        });
-                    }
+     function rastrearCarros() {
+    const markers = {};
+    
+    db.ref('posicoes').on('value', snap => {
+        snap.forEach(c => {
+            const id = c.key; 
+            const p = c.val();
+            
+            if(markers[id]) {
+                markers[id].setLatLng([p.lat, p.lng]);
+            } else {
+                // Cria o marcador
+                markers[id] = L.marker([p.lat, p.lng], { 
+                    icon: L.divIcon({ className:'marker-label', html: id, iconSize:[30,30] }) 
+                }).addTo(map);
+
+                // Criamos um popup vazio inicial para o marcador
+                markers[id].bindPopup("Carregando...");
+
+                // Evento de clique robusto
+                markers[id].on('click', function() {
+                    // Busca o nome sempre que clicar para garantir dados atualizados
+                    db.ref(`competidores/${id}/nome`).once('value', nomeSnap => {
+                        const nomeComp = nomeSnap.val() || "Não cadastrado";
+                        const velocidade = p.vel ? `<br>Velocidade: ${p.vel} km/h` : "";
+                        
+                        // Atualiza o conteúdo e abre o popup
+                        markers[id].setPopupContent(`<b>Carro: ${id}</b><br>Piloto: ${nomeComp}${velocidade}`);
+                        markers[id].openPopup();
+                    });
                 });
-            });
-        }
+            }
+        });
+    });
+}
 
         window.apurar = async function() {
             if(!confirm("Rodar apuração (Regra: 10% tol, 10s carência, -500pts/30s)?")) return;
@@ -244,21 +248,39 @@
 
                 config.features.forEach(feat => {
                     if(feat.geometry.type === 'Polygon') {
-                        const vMax = (feat.properties.velocidade || 60) * 1.1;
-                        let tempoExcessoMs = 0;
-                        for(let i = 1; i < rastroArr.length; i++) {
-                            const p = rastroArr[i];
-                            const duration = p.ts - rastroArr[i-1].ts;
-                            if (duration > 30000) continue; 
-                            if(p.vel > vMax && turf.booleanPointInPolygon(turf.point([p.lng, p.lat]), feat)) {
-                                tempoExcessoMs += duration;
-                            }
-                        }
-                        if(tempoExcessoMs > 10000) pen += (Math.floor((tempoExcessoMs - 10000) / 30000) + 1) * 500;
+                        const vMax = (feat.properties.velocidade || 60) * 1.1; // 10% tolerância
+                        // Dentro do loop dos polígonos na função apurar()
+let tempoExcessoMs = 0;
+
+for(let i = 1; i < rastroArr.length; i++) {
+    const p = rastroArr[i];
+    const duration = p.ts - rastroArr[i-1].ts;
+
+    // --- FILTROS DE SEGURANÇA ---
+    // 1. Ignora saltos de tempo muito grandes (ex: perda de sinal por mais de 30s)
+    if (duration > 30000) continue; 
+
+    // 2. Só processa se a velocidade for real (acima de 2km/h) 
+    // e se o ponto estiver dentro do radar (polígono)
+    if(p.vel > 2 && turf.booleanPointInPolygon(turf.point([p.lng, p.lat]), feat)) {
+        
+        // 3. Verifica se a velocidade filtrada excede o vMax da zona
+        if(p.vel > vMax) {
+            tempoExcessoMs += duration;
+        }
+    }
+}
+
+// A carência de 10 segundos que você já tem continua valendo:
+if(tempoExcessoMs > 10000) {
+    pen += (Math.floor((tempoExcessoMs - 10000) / 30000) + 1) * 500;
+}
                     } else if(feat.properties?.type === 'circle') {
                         const centro = feat.geometry.coordinates;
                         const raio = feat.properties.radius / 1000;
-                        if(!rastroArr.some(pt => turf.distance(turf.point([pt.lng, pt.lat]), turf.point(centro)) <= raio)) pen += 2000;
+                        if(!rastroArr.some(pt => turf.distance(turf.point([pt.lng, pt.lat]), turf.point(centro)) <= raio)) {
+                            pen += 2000;
+                        }
                     }
                 });
                 db.ref(`competidores/${id}`).update({ pontos: 0 - pen });
@@ -266,43 +288,101 @@
             alert("✅ Apuração concluída!");
         };
 
-        function atualizarSeletorCarros() {
-            const sel = document.getElementById('carSelector');
-            db.ref('competidores').on('value', snap => {
-                sel.innerHTML = '<option value="">Carro...</option>';
-                snap.forEach(c => { sel.innerHTML += `<option value="${c.key}">Carro ${c.key}</option>`; });
-            });
+        window.resetar = function() {
+            if(prompt("Senha de Segurança:") === "261291") db.ref('/').remove().then(() => location.reload());
+        };
+        // Função para manter a lista de carros do seletor atualizada
+function atualizarSeletorCarros() {
+    const selector = document.getElementById('carSelector');
+    db.ref('competidores').on('value', snap => {
+        // Limpa o seletor mantendo a opção padrão
+        selector.innerHTML = '<option value="">Selecionar Carro...</option>';
+        
+        snap.forEach(child => {
+            const carId = child.key;
+            const option = document.createElement('option');
+            option.value = carId;
+            option.textContent = `Carro ${carId}`;
+            selector.appendChild(option);
+        });
+    });
+}
+
+// Chame a função de atualizar quando o mapa iniciar
+// Adicione esta linha dentro do seu window.onload ou initMap:
+// atualizarSeletorCarros();
+
+window.excluirCarro = async function() {
+    const carId = document.getElementById('carSelector').value;
+    
+    if (!carId) {
+        alert("Por favor, selecione um carro primeiro.");
+        return;
+    }
+
+    const confirmacao = confirm(`⚠️ ATENÇÃO: Deseja realmente excluir o Carro ${carId}?\nIsso apagará o cadastro, rastro e pontos.`);
+    
+    if (confirmacao) {
+        try {
+            // Remove de todas as referências do banco
+            await Promise.all([
+                db.ref(`competidores/${carId}`).remove(),
+                db.ref(`posicoes/${carId}`).remove(),
+                db.ref(`rastros/${carId}`).remove(),
+                db.ref(`tempos/${carId}`).remove()
+            ]);
+            
+            alert(`✅ Carro ${carId} removido com sucesso!`);
+            
+            // Recarrega a página para limpar marcadores do mapa
+            location.reload(); 
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao excluir carro.");
         }
-
-        window.excluirCarro = async function() {
-            const id = document.getElementById('carSelector').value;
-            if (id && confirm(`Excluir carro ${id}?`)) {
-                await Promise.all([db.ref(`competidores/${id}`).remove(), db.ref(`posicoes/${id}`).remove(), db.ref(`rastros/${id}`).remove()]);
-                location.reload();
-            }
-        };
-
-        window.alternarStatusProva = () => {
-            const ref = db.ref('configuracoes/provaAberta');
-            ref.once('value', s => ref.set(!s.val()));
-        };
-
-        function monitorarStatusProva() {
-            db.ref('configuracoes/provaAberta').on('value', s => {
-                const btn = document.getElementById('btnStatusProva');
-                btn.innerText = s.val() ? "🔓 ABERTA" : "🔒 FECHADA";
-                btn.style.background = s.val() ? "#38a169" : "#e53e3e";
-            });
+    }
+};
+    // Função para monitorar e alternar o status da prova
+function monitorarStatusProva() {
+    const btn = document.getElementById('btnStatusProva');
+    db.ref('configuracoes/provaAberta').on('value', snap => {
+        const aberta = snap.val();
+        if (aberta) {
+            btn.innerText = "🔓 PROVA ABERTA";
+            btn.style.background = "#38a169"; // Verde
+        } else {
+            btn.innerText = "🔒 PROVA FECHADA";
+            btn.style.background = "#e53e3e"; // Vermelho
         }
+    });
+}
 
-        window.buscar = async function() {
-            const q = document.getElementById('cityInput').value;
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
-            const data = await res.json();
-            if(data[0]) map.setView([data[0].lat, data[0].lon], 14);
-        };
+window.alternarStatusProva = function() {
+    const ref = db.ref('configuracoes/provaAberta');
+    ref.once('value', snap => {
+        ref.set(!snap.val());
+    });
+};
 
-        window.resetar = () => { if(prompt("Senha:") === "261291") db.ref('/').remove().then(() => location.reload()); };
+// Chame monitorarStatusProva() dentro da sua função initMap()
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
