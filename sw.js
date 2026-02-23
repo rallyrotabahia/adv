@@ -5,7 +5,7 @@ const ASSETS_TO_CACHE = [
   './index.html',
   './manifest.json',
   './NoSleep.min.js',
-  'https://raw.githubusercontent.com/italomota2011/rallyadv/refs/heads/main/Logo.png',
+  'https://raw.githubusercontent.com/racekrono/adv/refs/heads/main/Logo.jpg',
   'https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js'
 ];
