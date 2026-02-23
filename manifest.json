@@ -1,6 +1,6 @@
 {
-  "name": "Rally Tracker Pro",
-  "short_name": "RallyTracker",
+  "name": "Race Krono",
+  "short_name": "RaceKrono",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#121212",
@@ -8,13 +8,13 @@
   "orientation": "portrait",
   "icons": [
     {
-  "src": "https://raw.githubusercontent.com/italomota2011/rallyadv/refs/heads/main/icone.jpg",
+  "src": "https://raw.githubusercontent.com/racekrono/adv/refs/heads/main/Logo.jpg",
   "sizes": "512x512",
   "type": "image/png",
   "purpose": "any" 
 },
 {
-  "src": "https://raw.githubusercontent.com/italomota2011/rallyadv/refs/heads/main/icone.jpg",
+  "src": "https://raw.githubusercontent.com/racekrono/adv/refs/heads/main/Logo.jpg",
   "sizes": "512x512",
   "type": "image/png",
   "purpose": "maskable"
